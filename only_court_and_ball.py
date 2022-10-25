@@ -36,9 +36,10 @@ from pickle import load
 # minimap = args.minimap
 # bounce = args.bounce
 #  python only_court_and_ball.py --input_video_path=/Users/tyler/Documents/GitHub/tennis-tracking/1secQatar.mp4 --output_video_path=VideoOutput/test_video_output.mp4 --minimap=1 --bounce=0
-input_video_path = '/Users/tyler/Documents/GitHub/tennis-tracking/shortQatar.mp4'
+# input_video_path = '/Users/tyler/Documents/GitHub/tennis-tracking/VideoInput/PaulVThiem.mp4'
+input_video_path = '/Users/tyler/Documents/GitHub/tennis-tracking/VideoInput/video_input8.mp4'
 output_video_path = 'VideoOutput/test_video_output.mp4'
-minimap = 1
+minimap = 0
 bounce = 0
 
 n_classes = 256
@@ -119,13 +120,16 @@ while True:
     else: # then track it
       print(f'Tracking the court and the players, frame {frame_i}')
       lines = court_detector.track_court(frame)
-    # detection_model.detect_player_1(frame, court_detector)
-    # detection_model.detect_top_persons(frame, court_detector, frame_i)
+
+
+    # lines = court_detector.detect(frame)
+    # lines = court_detector.track_court(frame)
     
     for i in range(0, len(lines), 4):
       x1, y1, x2, y2 = lines[i],lines[i+1], lines[i+2], lines[i+3]
       cv2.line(frame, (int(x1),int(y1)),(int(x2),int(y2)), (0,0,255), 5)
     new_frame = cv2.resize(frame, (v_width, v_height))
+    output_video.write(new_frame)
     frames.append(new_frame)
   else:
     break
@@ -138,99 +142,100 @@ frame_i = 0
 
 last = time.time() # start counting 
 # while (True):
-for img in frames:
-    print('Tracking the ball: {}'.format(round( (currentFrame / total) * 100, 2)))
-    frame_i += 1
+#ball tracking
+# for img in frames:
+#     print('Tracking the ball: {}'.format(round( (currentFrame / total) * 100, 2)))
+#     frame_i += 1
 
-    # detect the ball
-    # img is the frame that TrackNet will predict the position
-    # since we need to change the size and type of img, copy it to output_img
-    output_img = img
+#     # detect the ball
+#     # img is the frame that TrackNet will predict the position
+#     # since we need to change the size and type of img, copy it to output_img
+#     output_img = img
 
-    # resize it
-    img = cv2.resize(img, (width, height))
-    # input must be float type
-    img = img.astype(np.float32)
+#     # resize it
+#     img = cv2.resize(img, (width, height))
+#     # input must be float type
+#     img = img.astype(np.float32)
 
-    # since the odering of TrackNet  is 'channels_first', so we need to change the axis
-    # X = np.rollaxis(img, 2, 0)
-    pr = np.rollaxis(img, 2, 0)
-    # prdict heatmap
-    # pr = m.predict(np.array([X]))[0]
+#     # since the odering of TrackNet  is 'channels_first', so we need to change the axis
+#     X = np.rollaxis(img, 2, 0)
+#     # pr = np.rollaxis(img, 2, 0)
+#     # prdict heatmap
+#     pr = m.predict(np.array([X]))[0]
 
-    # since TrackNet output is ( net_output_height*model_output_width , n_classes )
-    # so we need to reshape image as ( net_output_height, model_output_width , n_classes(depth) )
-    pr = pr.reshape((height, width, n_classes)).argmax(axis=2)
+#     # since TrackNet output is ( net_output_height*model_output_width , n_classes )
+#     # so we need to reshape image as ( net_output_height, model_output_width , n_classes(depth) )
+#     pr = pr.reshape((height, width, n_classes)).argmax(axis=2)
 
-    # cv2 image must be numpy.uint8, convert numpy.int64 to numpy.uint8
-    pr = pr.astype(np.uint8)
+#     # cv2 image must be numpy.uint8, convert numpy.int64 to numpy.uint8
+#     pr = pr.astype(np.uint8)
 
-    # reshape the image size as original input image
-    heatmap = cv2.resize(pr, (output_width, output_height))
+#     # reshape the image size as original input image
+#     heatmap = cv2.resize(pr, (output_width, output_height))
 
-    # heatmap is converted into a binary image by threshold method.
-    ret, heatmap = cv2.threshold(heatmap, 127, 255, cv2.THRESH_BINARY)
+#     # heatmap is converted into a binary image by threshold method.
+#     ret, heatmap = cv2.threshold(heatmap, 127, 255, cv2.THRESH_BINARY)
 
-    # find the circle in image with 2<=radius<=7
-    circles = cv2.HoughCircles(heatmap, cv2.HOUGH_GRADIENT, dp=1, minDist=1, param1=50, param2=2, minRadius=2,
-                              maxRadius=7)
+#     # find the circle in image with 2<=radius<=7
+#     circles = cv2.HoughCircles(heatmap, cv2.HOUGH_GRADIENT, dp=1, minDist=1, param1=50, param2=2, minRadius=2,
+#                               maxRadius=7)
 
 
-    # output_img = mark_player_box(output_img, player1_boxes, currentFrame-1)
-    # output_img = mark_player_box(output_img, player2_boxes, currentFrame-1)
+#     # output_img = mark_player_box(output_img, player1_boxes, currentFrame-1)
+#     # output_img = mark_player_box(output_img, player2_boxes, currentFrame-1)
     
-    PIL_image = cv2.cvtColor(output_img, cv2.COLOR_BGR2RGB)
-    PIL_image = Image.fromarray(PIL_image)
+#     PIL_image = cv2.cvtColor(output_img, cv2.COLOR_BGR2RGB)
+#     PIL_image = Image.fromarray(PIL_image)
 
-    # check if there have any tennis be detected
-    if circles is not None:
-        # if only one tennis be detected
-        if len(circles) == 1:
+#     # check if there have any tennis be detected
+#     if circles is not None:
+#         # if only one tennis be detected
+#         if len(circles) == 1:
 
-            x = int(circles[0][0][0])
-            y = int(circles[0][0][1])
+#             x = int(circles[0][0][0])
+#             y = int(circles[0][0][1])
 
-            coords.append([x,y])
-            t.append(time.time()-last)
+#             coords.append([x,y])
+#             t.append(time.time()-last)
 
-            # push x,y to queue
-            q.appendleft([x, y])
-            # pop x,y from queue
-            q.pop()
+#             # push x,y to queue
+#             q.appendleft([x, y])
+#             # pop x,y from queue
+#             q.pop()
 
-        else:
-            coords.append(None)
-            t.append(time.time()-last)
-            # push None to queue
-            q.appendleft(None)
-            # pop x,y from queue
-            q.pop()
+#         else:
+#             coords.append(None)
+#             t.append(time.time()-last)
+#             # push None to queue
+#             q.appendleft(None)
+#             # pop x,y from queue
+#             q.pop()
 
-    else:
-        coords.append(None)
-        t.append(time.time()-last)
-        # push None to queue
-        q.appendleft(None)
-        # pop x,y from queue
-        q.pop()
+#     else:
+#         coords.append(None)
+#         t.append(time.time()-last)
+#         # push None to queue
+#         q.appendleft(None)
+#         # pop x,y from queue
+#         q.pop()
 
-    # draw current frame prediction and previous 7 frames as yellow circle, total: 8 frames
-    for i in range(0, 8):
-        if q[i] is not None:
-            draw_x = q[i][0]
-            draw_y = q[i][1]
-            bbox = (draw_x - 2, draw_y - 2, draw_x + 2, draw_y + 2)
-            draw = ImageDraw.Draw(PIL_image)
-            draw.ellipse(bbox, outline='yellow')
-            del draw
+#     # draw current frame prediction and previous 7 frames as yellow circle, total: 8 frames
+#     for i in range(0, 8):
+#         if q[i] is not None:
+#             draw_x = q[i][0]
+#             draw_y = q[i][1]
+#             bbox = (draw_x - 2, draw_y - 2, draw_x + 2, draw_y + 2)
+#             draw = ImageDraw.Draw(PIL_image)
+#             draw.ellipse(bbox, outline='yellow')
+#             del draw
 
-    # Convert PIL image format back to opencv image format
-    opencvImage = cv2.cvtColor(np.array(PIL_image), cv2.COLOR_RGB2BGR)
+#     # Convert PIL image format back to opencv image format
+#     opencvImage = cv2.cvtColor(np.array(PIL_image), cv2.COLOR_RGB2BGR)
 
-    output_video.write(opencvImage)
+#     output_video.write(opencvImage)
 
-    # next frame
-    currentFrame += 1
+#     # next frame
+#     currentFrame += 1
 
 # everything is done, release the video
 video.release()
@@ -272,32 +277,32 @@ if minimap == 1:
     x, y = diff_xy(coords)
     remove_outliers(x, y, coords)
 
-# interpolation
-coords = interpolation(coords)
+# # interpolation
+# coords = interpolation(coords)
 
-# velocty 
-Vx = []
-Vy = []
-V = []
-frames = [*range(len(coords))]
+# # velocty 
+# Vx = []
+# Vy = []
+# V = []
+# frames = [*range(len(coords))]
 
-for i in range(len(coords)-1):
-  p1 = coords[i]
-  p2 = coords[i+1]
-  t1 = t[i]
-  t2 = t[i+1]
-  x = (p1[0]-p2[0])/(t1-t2)
-  y = (p1[1]-p2[1])/(t1-t2)
-  Vx.append(x)
-  Vy.append(y)
+# for i in range(len(coords)-1):
+#   p1 = coords[i]
+#   p2 = coords[i+1]
+#   t1 = t[i]
+#   t2 = t[i+1]
+#   x = (p1[0]-p2[0])/(t1-t2)
+#   y = (p1[1]-p2[1])/(t1-t2)
+#   Vx.append(x)
+#   Vy.append(y)
 
-for i in range(len(Vx)):
-  vx = Vx[i]
-  vy = Vy[i]
-  v = (vx**2+vy**2)**0.5
-  V.append(v)
+# for i in range(len(Vx)):
+#   vx = Vx[i]
+#   vy = Vy[i]
+#   v = (vx**2+vy**2)**0.5
+#   V.append(v)
 
-xy = coords[:]
+# xy = coords[:]
 
 if bounce == 1:
   # Predicting Bounces 
