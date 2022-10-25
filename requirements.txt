@@ -1,5 +1,5 @@
 requests
-# opencv_contrib_python
+opencv_contrib_python
 scipy
 keras
 pandas
@@ -14,4 +14,4 @@ filterpy
 sktime
 sympy
 scikit-image
-# opencv-python
+torchvision
